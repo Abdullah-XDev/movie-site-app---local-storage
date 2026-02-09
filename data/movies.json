@@ -1,0 +1,26 @@
+[
+  {
+    "id": 1769034644169,
+    "title": "It",
+    "category": "رعب",
+    "type": "movie",
+    "image": "/uploads/images/1769034644136-776286249.jpeg",
+    "videoUrl": "/uploads/movies/1769034644137-872821583.mp4"
+  },
+  {
+    "id": 1769034768282,
+    "title": "The Mask",
+    "category": "كوميديا",
+    "type": "movie",
+    "image": "/uploads/images/1769034768262-936139460.jpg",
+    "videoUrl": "/uploads/movies/1769034768262-301061450.mp4"
+  },
+  {
+    "id": 1769034848598,
+    "title": "Avatar",
+    "category": "خيال علمي",
+    "type": "movie",
+    "image": "/uploads/images/1769034848566-730937851.jpg",
+    "videoUrl": "/uploads/movies/1769034848567-402053662.mp4"
+  }
+]

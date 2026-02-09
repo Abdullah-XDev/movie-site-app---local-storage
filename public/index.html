@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#dc2626">
+    <title>موقع الأفلام والمسلسلات</title>
+    <link rel="manifest" href="/manifest.json">
+    <link rel="apple-touch-icon" href="/icon-192.png">
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react/18.2.0/umd/react.production.min.js"></script>
+    <script crossorigin src="https://cdnjs.cloudflare.com/ajax/libs/react-dom/18.2.0/umd/react-dom.production.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-standalone/7.23.5/babel.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        * { 
+            margin: 0; 
+            padding: 0; 
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        body { 
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            overflow-x: hidden;
+        }
+    </style>
+</head>
+<body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+        const { useState, useEffect } = React;
+
+        const Film = ({ size = 24, className = "" }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className={className}>
+                <rect x="2" y="2" width="20" height="20" rx="2.18" ry="2.18"></rect>
+                <line x1="7" y1="2" x2="7" y2="22"></line>
+                <line x1="17" y1="2" x2="17" y2="22"></line>
+                <line x1="2" y1="12" x2="22" y2="12"></line>
+            </svg>
+        );
+
+        const Play = ({ size = 24 }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
+                <polygon points="5 3 19 12 5 21 5 3"></polygon>
+            </svg>
+        );
+
+        const ArrowRight = ({ size = 24 }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="19" y1="12" x2="5" y2="12"></line>
+                <polyline points="12 19 5 12 12 5"></polyline>
+            </svg>
+        );
+
+        const Plus = ({ size = 24 }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <line x1="12" y1="5" x2="12" y2="19"></line>
+                <line x1="5" y1="12" x2="19" y2="12"></line>
+            </svg>
+        );
+
+        const Trash2 = ({ size = 24 }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <polyline points="3 6 5 6 21 6"></polyline>
+                <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
+                <line x1="10" y1="11" x2="10" y2="17"></line>
+                <line x1="14" y1="11" x2="14" y2="17"></line>
+            </svg>
+        );
+
+        const Home = ({ size = 24 }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                <polyline points="9 22 9 12 15 12 15 22"></polyline>
+            </svg>
+        );
+
+        const Settings = ({ size = 24 }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M12 1v6m0 6v6"></path>
+            </svg>
+        );
+
+        const Tv = ({ size = 24 }) => (
+            <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
+                <polyline points="17 2 12 7 7 2"></polyline>
+            </svg>
+        );
+
+        const MovieWebsite = () => {
+            const [page, setPage] = useState('home');
+            const [category, setCategory] = useState(null);
+            const [item, setItem] = useState(null);
+            const [items, setItems] = useState([]);
+            const [admin, setAdmin] = useState(false);
+            const [loading, setLoading] = useState(false);
+
+            const categories = ["رعب", "أكشن", "دراما", "كوميديا", "آنمي", "خيال علمي"];
+
+            useEffect(() => {
+                loadItems();
+            }, []);
+
+            const loadItems = async () => {
+                try {
+                    const res = await fetch('/api/movies');
+                    const data = await res.json();
+                    setItems(data);
+                } catch (err) {
+                    console.error('خطأ:', err);
+                }
+            };
+
+            const AdminPanel = () => {
+                const [title, setTitle] = useState('');
+                const [cat, setCat] = useState('أكشن');
+                const [type, setType] = useState('movie');
+                const [img, setImg] = useState(null);
+                const [vid, setVid] = useState(null);
+                const [episodes, setEpisodes] = useState([]);
+                const [episodeCount, setEpisodeCount] = useState(1);
+                const [msg, setMsg] = useState('');
+
+                const handleEpisodeChange = (index, file) => {
+                    const newEpisodes = [...episodes];
+                    newEpisodes[index] = file;
+                    setEpisodes(newEpisodes);
+                };
+
+                const addItem = async () => {
+                    if (!title || !img) {
+                        alert('أدخل الاسم والصورة');
+                        return;
+                    }
+
+                    if (type === 'movie' && !vid) {
+                        alert('أضف ملف الفيلم');
+                        return;
+                    }
+
+                    if (type === 'series' && episodes.filter(e => e).length === 0) {
+                        alert('أضف حلقة واحدة على الأقل');
+                        return;
+                    }
+
+                    setLoading(true);
+                    setMsg('جاري الرفع...');
+
+                    const form = new FormData();
+                    form.append('title', title);
+                    form.append('category', cat);
+                    form.append('type', type);
+                    form.append('image', img);
+
+                    if (type === 'movie') {
+                        form.append('video', vid);
+                    } else {
+                        episodes.forEach((ep, index) => {
+                            if (ep) {
+                                form.append(`episode_${index + 1}`, ep);
+                            }
+                        });
+                    }
+
+                    try {
+                        const res = await fetch('/api/movies', {
+                            method: 'POST',
+                            body: form
+                        });
+                        const data = await res.json();
+                        
+                        if (data.success) {
+                            alert('تمت الإضافة بنجاح!');
+                            setTitle('');
+                            setCat('أكشن');
+                            setType('movie');
+                            setImg(null);
+                            setVid(null);
+                            setEpisodes([]);
+                            setEpisodeCount(1);
+                            await loadItems();
+                        }
+                    } catch (err) {
+                        alert('خطأ في الإضافة');
+                    } finally {
+                        setLoading(false);
+                        setMsg('');
+                    }
+                };
+
+                const delItem = async (id) => {
+                    if (!confirm('حذف المحتوى؟')) return;
+                    
+                    try {
+                        await fetch(`/api/movies/${id}`, { method: 'DELETE' });
+                        await loadItems();
+                    } catch (err) {
+                        alert('خطأ في الحذف');
+                    }
+                };
+
+                return (
+                    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 text-white p-4 md:p-8">
+                        <div className="max-w-6xl mx-auto">
+                            <div className="flex justify-between items-center mb-8">
+                                <h1 className="text-2xl md:text-4xl font-bold">لوحة التحكم</h1>
+                                <button onClick={() => { setAdmin(false); setPage('home'); }} className="bg-blue-600 hover:bg-blue-700 px-4 md:px-6 py-2 rounded-lg flex items-center gap-2">
+                                    <Home size={20} />
+                                    <span className="hidden md:inline">الرئيسية</span>
+                                </button>
+                            </div>
+
+                            <div className="bg-gray-800 rounded-xl p-4 md:p-6 mb-8">
+                                <h2 className="text-xl md:text-2xl font-bold mb-4">إضافة محتوى</h2>
+                                {msg && <div className="bg-blue-900 p-3 rounded mb-4">{msg}</div>}
+                                
+                                <div className="space-y-4">
+                                    <input 
+                                        type="text" 
+                                        placeholder="الاسم" 
+                                        value={title} 
+                                        onChange={(e) => setTitle(e.target.value)} 
+                                        className="w-full bg-gray-700 text-white px-4 py-3 rounded-lg outline-none" 
+                                        disabled={loading} 
+                                    />
+                                    
+                                    <select 
+                                        value={cat} 
+                                        onChange={(e) => setCat(e.target.value)} 
+                                        className="w-full bg-gray-700 text-white px-4 py-3 rounded-lg outline-none" 
+                                        disabled={loading}
+                                    >
+                                        {categories.map(c => <option key={c} value={c}>{c}</option>)}
+                                    </select>
+
+                                    <div className="bg-gray-700 rounded-lg p-4">
+                                        <label className="block mb-3 font-bold">النوع:</label>
+                                        <div className="flex gap-4">
+                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                <input 
+                                                    type="radio" 
+                                                    value="movie" 
+                                                    checked={type === 'movie'} 
+                                                    onChange={(e) => setType(e.target.value)}
+                                                    disabled={loading}
+                                                    className="w-5 h-5"
+                                                />
+                                                <Film size={20} />
+                                                <span>فيلم</span>
+                                            </label>
+                                            <label className="flex items-center gap-2 cursor-pointer">
+                                                <input 
+                                                    type="radio" 
+                                                    value="series" 
+                                                    checked={type === 'series'} 
+                                                    onChange={(e) => setType(e.target.value)}
+                                                    disabled={loading}
+                                                    className="w-5 h-5"
+                                                />
+                                                <Tv size={20} />
+                                                <span>مسلسل</span>
+                                            </label>
+                                        </div>
+                                    </div>
+
+                                    <div>
+                                        <label className="block mb-2">الصورة</label>
+                                        <input 
+                                            type="file" 
+                                            accept="image/*" 
+                                            onChange={(e) => setImg(e.target.files[0])} 
+                                            className="w-full bg-gray-700 px-4 py-3 rounded-lg" 
+                                            disabled={loading} 
+                                        />
+                                        {img && <p className="mt-2 text-green-400 text-sm">✓ {img.name}</p>}
+                                    </div>
+
+                                    {type === 'movie' ? (
+                                        <div>
+                                            <label className="block mb-2">ملف الفيلم</label>
+                                            <input 
+                                                type="file" 
+                                                accept="video/*" 
+                                                onChange={(e) => setVid(e.target.files[0])} 
+                                                className="w-full bg-gray-700 px-4 py-3 rounded-lg" 
+                                                disabled={loading} 
+                                            />
+                                            {vid && <p className="mt-2 text-green-400 text-sm flex items-center gap-2"><Play size={16} /> ✓ {vid.name}</p>}
+                                        </div>
+                                    ) : (
+                                        <div className="bg-gray-700 rounded-lg p-4">
+                                            <div className="flex justify-between items-center mb-4">
+                                                <label className="font-bold">الحلقات</label>
+                                                <div className="flex gap-2">
+                                                    <button 
+                                                        onClick={() => setEpisodeCount(Math.max(1, episodeCount - 1))}
+                                                        className="bg-red-600 hover:bg-red-700 px-3 py-1 rounded"
+                                                        disabled={loading}
+                                                    >-</button>
+                                                    <span className="px-3 py-1">{episodeCount}</span>
+                                                    <button 
+                                                        onClick={() => setEpisodeCount(episodeCount + 1)}
+                                                        className="bg-green-600 hover:bg-green-700 px-3 py-1 rounded"
+                                                        disabled={loading}
+                                                    >+</button>
+                                                </div>
+                                            </div>
+                                            <div className="space-y-2 max-h-60 overflow-y-auto">
+                                                {Array.from({ length: episodeCount }).map((_, index) => (
+                                                    <div key={index} className="bg-gray-800 p-3 rounded">
+                                                        <label className="block mb-2 text-sm">الحلقة {index + 1}</label>
+                                                        <input 
+                                                            type="file" 
+                                                            accept="video/*" 
+                                                            onChange={(e) => handleEpisodeChange(index, e.target.files[0])}
+                                                            className="w-full bg-gray-600 px-3 py-2 rounded text-sm"
+                                                            disabled={loading}
+                                                        />
+                                                        {episodes[index] && <p className="mt-1 text-green-400 text-xs">✓ {episodes[index].name}</p>}
+                                                    </div>
+                                                ))}
+                                            </div>
+                                        </div>
+                                    )}
+
+                                    <button 
+                                        onClick={addItem} 
+                                        disabled={loading} 
+                                        className={`w-full py-3 rounded-lg flex items-center justify-center gap-2 font-bold ${loading ? 'bg-gray-600' : 'bg-green-600 hover:bg-green-700'}`}
+                                    >
+                                        <Plus size={20} />
+                                        {loading ? 'جاري الرفع...' : 'إضافة'}
+                                    </button>
+                                </div>
+                            </div>
+
+                            <div className="bg-gray-800 rounded-xl p-4 md:p-6">
+                                <h2 className="text-xl md:text-2xl font-bold mb-4">المحتوى ({items.length})</h2>
+                                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                                    {items.map(m => (
+                                        <div key={m.id} className="bg-gray-700 rounded-lg p-4">
+                                            <div className="relative">
+                                                <img src={m.image} alt={m.title} className="w-full h-48 object-cover rounded-lg mb-3" />
+                                                {m.type === 'series' && (
+                                                    <span className="absolute top-2 right-2 bg-purple-600 px-2 py-1 rounded text-xs flex items-center gap-1">
+                                                        <Tv size={14} />
+                                                        مسلسل
+                                                    </span>
+                                                )}
+                                            </div>
+                                            <h3 className="font-bold text-lg mb-1">{m.title}</h3>
+                                            <p className="text-gray-400 text-sm mb-2">{m.category}</p>
+                                            {m.type === 'series' && m.episodes && (
+                                                <p className="text-purple-400 text-xs mb-3">{m.episodes.length} حلقة</p>
+                                            )}
+                                            <button 
+                                                onClick={() => delItem(m.id)} 
+                                                className="w-full bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg flex items-center justify-center gap-2"
+                                            >
+                                                <Trash2 size={16} />
+                                                حذف
+                                            </button>
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                );
+            };
+
+            const VideoPlayer = ({ episode = null }) => {
+                const [currentEpisode, setCurrentEpisode] = useState(episode || (item.episodes ? item.episodes[0] : null));
+
+                return (
+                    <div className="min-h-screen bg-black text-white">
+                        <div className="p-4 flex justify-between items-center">
+                            <button 
+                                onClick={() => { setItem(null); setPage('category'); }} 
+                                className="bg-gray-800 hover:bg-gray-700 px-4 md:px-6 py-2 md:py-3 rounded-lg flex items-center gap-2"
+                            >
+                                <ArrowRight size={20} />
+                                العودة
+                            </button>
+                            <h2 className="text-lg md:text-xl font-bold">{item.title}</h2>
+                        </div>
+
+                        {item.type === 'series' && item.episodes ? (
+                            <div className="flex flex-col md:flex-row">
+                                <div className="md:w-3/4">
+                                    {currentEpisode && currentEpisode.url ? (
+                                        <video 
+                                            key={currentEpisode.number}
+                                            controls 
+                                            autoPlay 
+                                            playsInline 
+                                            className="w-full" 
+                                            style={{maxHeight: 'calc(100vh - 100px)'}}
+                                            src={currentEpisode.url}
+                                        >
+                                            متصفحك لا يدعم الفيديو
+                                        </video>
+                                    ) : (
+                                        <div className="flex items-center justify-center h-96">
+                                            <p className="text-gray-400">اختر حلقة للمشاهدة</p>
+                                        </div>
+                                    )}
+                                </div>
+                                <div className="md:w-1/4 bg-gray-900 p-4 max-h-screen overflow-y-auto">
+                                    <h3 className="font-bold mb-4 text-lg">الحلقات ({item.episodes.length})</h3>
+                                    <div className="space-y-2">
+                                        {item.episodes.map(ep => (
+                                            <button
+                                                key={ep.number}
+                                                onClick={() => setCurrentEpisode(ep)}
+                                                className={`w-full text-right p-3 rounded-lg flex items-center gap-3 transition ${
+                                                    currentEpisode?.number === ep.number 
+                                                        ? 'bg-red-600' 
+                                                        : 'bg-gray-800 hover:bg-gray-700'
+                                                }`}
+                                            >
+                                                <Play size={16} />
+                                                <span>{ep.title || `الحلقة ${ep.number}`}</span>
+                                            </button>
+                                        ))}
+                                    </div>
+                                </div>
+                            </div>
+                        ) : (
+                            <div className="flex items-center justify-center" style={{height: 'calc(100vh - 80px)'}}>
+                                {item.videoUrl ? (
+                                    <video 
+                                        controls 
+                                        autoPlay 
+                                        playsInline 
+                                        className="w-full h-full" 
+                                        src={item.videoUrl}
+                                    >
+                                        متصفحك لا يدعم الفيديو
+                                    </video>
+                                ) : (
+                                    <div className="text-center p-4">
+                                        <Film size={64} className="mx-auto mb-4 text-gray-600" />
+                                        <h2 className="text-xl md:text-2xl font-bold mb-2">{item.title}</h2>
+                                        <p className="text-gray-400">لم يتم رفع الفيديو</p>
+                                    </div>
+                                )}
+                            </div>
+                        )}
+                    </div>
+                );
+            };
+
+            const CategoryPage = () => {
+                const catItems = items.filter(m => m.category === category);
+                
+                return (
+                    <div className="min-h-screen bg-gradient-to-br from-purple-900 via-blue-900 to-gray-900 text-white p-4 md:p-8">
+                        <div className="max-w-7xl mx-auto">
+                            <div className="flex justify-between items-center mb-8">
+                                <h1 className="text-2xl md:text-4xl font-bold">{category}</h1>
+                                <button 
+                                    onClick={() => { setCategory(null); setPage('home'); }} 
+                                    className="bg-blue-600 hover:bg-blue-700 px-4 md:px-6 py-2 md:py-3 rounded-lg flex items-center gap-2"
+                                >
+                                    <Home size={20} />
+                                    <span className="hidden md:inline">الرئيسية</span>
+                                </button>
+                            </div>
+
+                            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4 md:gap-6">
+                                {catItems.map(m => (
+                                    <div key={m.id} className="bg-gray-800 bg-opacity-50 rounded-xl overflow-hidden hover:scale-105 transition">
+                                        <div className="relative">
+                                            <img src={m.image} alt={m.title} className="w-full h-48 md:h-64 object-cover" />
+                                            {m.type === 'series' && (
+                                                <div className="absolute top-2 right-2 bg-purple-600 px-2 py-1 rounded-lg text-xs flex items-center gap-1">
+                                                    <Tv size={14} />
+                                                    <span className="hidden md:inline">مسلسل</span>
+                                                </div>
+                                            )}
+                                        </div>
+                                        <div className="p-3 md:p-4">
+                                            <h3 className="font-bold text-base md:text-lg mb-2">{m.title}</h3>
+                                            {m.type === 'series' && m.episodes && (
+                                                <p className="text-purple-300 text-xs mb-2">{m.episodes.length} حلقة</p>
+                                            )}
+                                            <button 
+                                                onClick={() => { setItem(m); setPage('player'); }} 
+                                                className="w-full bg-red-600 hover:bg-red-700 px-3 md:px-4 py-2 rounded-lg flex items-center justify-center gap-2 font-bold text-sm md:text-base"
+                                            >
+                                                <Play size={18} />
+                                                مشاهدة
+                                            </button>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {catItems.length === 0 && (
+                                <div className="text-center text-gray-400 mt-20">
+                                    <Film size={64} className="mx-auto mb-4" />
+                                    <p className="text-xl">لا يوجد محتوى</p>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                );
+            };
+
+            const HomePage = () => (
+                <div className="min-h-screen bg-gradient-to-br from-indigo-900 via-purple-900 to-pink-900 text-white">
+                    <nav className="bg-black bg-opacity-50 p-4">
+                        <div className="max-w-7xl mx-auto flex justify-between items-center">
+                            <div className="flex items-center gap-2">
+                                <Film size={28} className="text-red-600 md:w-8 md:h-8" />
+                                <h1 className="text-lg md:text-2xl font-bold">العائلة و الأفلام</h1>
+                            </div>
+                            <button 
+                                onClick={() => setAdmin(true)} 
+                                className="bg-gray-800 hover:bg-gray-700 px-3 md:px-4 py-2 rounded-lg flex items-center gap-2 text-sm md:text-base"
+                            >
+                                <Settings size={18} />
+                                <span className="hidden md:inline">الإدارة</span>
+                            </button>
+                        </div>
+                    </nav>
+
+                    <div className="max-w-7xl mx-auto p-4 md:p-8">
+                        <div className="text-center mb-8 md:mb-12">
+                            <h2 className="text-3xl md:text-5xl font-bold mb-4">عائلتي الجميلة اتمني لكم مشاهدة ممتعة</h2>
+                            <p className="text-base md:text-xl text-gray-300">اختر التصنيف المفضل لديك</p>
+                        </div>
+
+                        <div className="grid grid-cols-2 md:grid-cols-3 gap-4 md:gap-6">
+                            {categories.map(c => {
+                                const count = items.filter(m => m.category === c).length;
+                                return (
+                                    <button 
+                                        key={c} 
+                                        onClick={() => { setCategory(c); setPage('category'); }} 
+                                        className="bg-gradient-to-br from-gray-800 to-gray-900 p-6 md:p-8 rounded-2xl hover:scale-105 transition shadow-2xl border border-gray-700 hover:border-purple-500"
+                                    >
+                                        <Film size={40} className="mx-auto mb-4 text-purple-400 md:w-12 md:h-12" />
+                                        <h3 className="text-lg md:text-2xl font-bold mb-2">{c}</h3>
+                                        <p className="text-sm md:text-base text-gray-400">{count} عنصر</p>
+                                    </button>
+                                );
+                            })}
+                        </div>
+                    </div>
+                </div>
+            );
+
+            if (admin) return <AdminPanel />;
+            if (page === 'player') return <VideoPlayer />;
+            if (page === 'category') return <CategoryPage />;
+            return <HomePage />;
+        };
+
+        const root = ReactDOM.createRoot(document.getElementById('root'));
+        root.render(<MovieWebsite />);
+    </script>
+</body>
+</html>
